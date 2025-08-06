@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ffd89b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="バナナ判定">
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIuODkOODiuODiueGn+W6puODgeOCp+ODg+OCq+ODvCIsCiAgInNob3J0X25hbWUiOiAi44OQ44OK44OK5Yik5a6aIiwKICAiZGVzY3JpcHRpb24iOiAi44OQ44OK44OK44Gu54af5bqm44KS5YaZ55yf44Gn5Yik5a6aIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmQ4OWIiLAogICJ0aGVtZV9jb2xvciI6ICIjZmZkODliIiwKICAib3JpZW50YXRpb24iOiAicG9ydHJhaXQiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUIzYVdSMGFEMGlNVGt5SWlCb1pXbG5hSFE5SWpFNU1pSWdkbWxsZDBKdmVEMGlNQ0F3SURFNU1pQXhPVElpSUhodGJHNXpQU0pvZEhSd09pOHZkM2QzTG5jekxtOXlaeTh5TURBd0wzTjJaeUkrUEhKbFkzUWdkMmxrZEdnOUlqRTVNaUlnYUdWcFoyaDBQU0l4T1RJaUlHWnBiR3c5SWlObVptUTRPV0lpTHo0OGRHVjRkQ0I0UFNJNU5pSWdlVDBpTVRJd0lpQm1iMjUwTFhOcGVtVTlJamd3SWlCbWFXeHNQU0lqTkRReklpQjBaWGgwTFdGdVkyaHZjajBpYldsa1pHeGxJajd3bjQ2bkR3SjBaWGgwUGp3dmMzWm5QZz09IiwKICAgICAgInNpemVzIjogIjE5MngxOTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfQogIF0KfQ==">
+    <title>バナナ熟度チェッカー PWA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .install-prompt.show {
+            display: block;
+        }
+
+        .install-button {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #ffd89b;
+            background: #fffef5;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .upload-button, .camera-button {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+
+        .upload-button:hover, .camera-button:hover {
+            transform: scale(1.05);
+        }
+
+        .upload-button:active, .camera-button:active {
+            transform: scale(0.95);
+        }
+
+        .preview-container {
+            margin-top: 30px;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .preview-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        canvas {
+            display: none;
+        }
+
+        .result-container {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .ripeness-scale {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .scale-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px 5px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            opacity: 0.3;
+        }
+
+        .scale-item.active {
+            opacity: 1;
+            transform: scale(1.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .scale-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .scale-label {
+            font-size: 10px;
+            color: white;
+            margin-top: 5px;
+        }
+
+        .result-text {
+            text-align: center;
+            font-size: 18px;
+            color: #333;
+            margin-top: 20px;
+        }
+
+        .result-description {
+            text-align: center;
+            color: #666;
+            margin-top: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .retry-button {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 20px auto 0;
+            display: block;
+            transition: transform 0.2s;
+        }
+
+        .retry-button:hover {
+            transform: scale(1.05);
+        }
+
+        .retry-button:active {
+            transform: scale(0.95);
+        }
+
+        .color-3 { background: linear-gradient(135deg, #4CAF50, #8BC34A); }
+        .color-4 { background: linear-gradient(135deg, #8BC34A, #CDDC39); }
+        .color-5 { background: linear-gradient(135deg, #CDDC39, #FFEB3B); }
+        .color-6 { background: linear-gradient(135deg, #FFEB3B, #FFC107); }
+        .color-7 { background: linear-gradient(135deg, #FFC107, #FF9800); }
+        .color-8 { background: linear-gradient(135deg, #FF9800, #FF5722); }
+        .color-9 { background: linear-gradient(135deg, #795548, #5D4037); }
+    </style>
+</head>
+<body>
+    <div class="install-prompt" id="installPrompt">
+        <p style="margin-bottom: 10px;">🍌 ホーム画面に追加してアプリとして使えます！</p>
+        <button class="install-button" id="installButton">ホーム画面に追加</button>
+    </div>
+
+    <div class="container">
+        <h1>🍌 バナナ熟度チェッカー</h1>
+        <p class="subtitle">写真を撮影または選択して、バナナの熟度（カラー3〜9）を判定します</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📸</div>
+            <p class="upload-text">バナナの写真を選択してください</p>
+            <div class="button-group">
+                <button class="camera-button" onclick="document.getElementById('cameraInput').click()">
+                    カメラで撮影
+                </button>
+                <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+                    ファイル選択
+                </button>
+            </div>
+            <input type="file" id="cameraInput" class="file-input" accept="image/*" capture="camera">
+            <input type="file" id="fileInput" class="file-input" accept="image/*">
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+            <img id="previewImage" class="preview-image" alt="バナナ画像">
+            <canvas id="canvas"></canvas>
+            
+            <div class="result-container">
+                <div class="ripeness-scale">
+                    <div class="scale-item color-3" data-level="3">
+                        <div class="scale-number">3</div>
+                        <div class="scale-label">緑</div>
+                    </div>
+                    <div class="scale-item color-4" data-level="4">
+                        <div class="scale-number">4</div>
+                        <div class="scale-label">緑黄</div>
+                    </div>
+                    <div class="scale-item color-5" data-level="5">
+                        <div class="scale-number">5</div>
+                        <div class="scale-label">黄緑</div>
+                    </div>
+                    <div class="scale-item color-6" data-level="6">
+                        <div class="scale-number">6</div>
+                        <div class="scale-label">黄</div>
+                    </div>
+                    <div class="scale-item color-7" data-level="7">
+                        <div class="scale-number">7</div>
+                        <div class="scale-label">黄斑</div>
+                    </div>
+                    <div class="scale-item color-8" data-level="8">
+                        <div class="scale-number">8</div>
+                        <div class="scale-label">斑点</div>
+                    </div>
+                    <div class="scale-item color-9" data-level="9">
+                        <div class="scale-number">9</div>
+                        <div class="scale-label">褐色</div>
+                    </div>
+                </div>
+                
+                <div class="result-text" id="resultText">分析中...</div>
+                <div class="result-description" id="resultDescription"></div>
+                
+                <button class="retry-button" onclick="resetApp()">別の写真で試す</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Service Worker登録
+        if ('serviceWorker' in navigator) {
+            const sw = `
+self.addEventListener('install', e => {
+    e.waitUntil(
+        caches.open('banana-v1').then(cache => {
+            return cache.addAll(['/']);
+        })
+    );
+});
+
+self.addEventListener('fetch', e => {
+    e.respondWith(
+        caches.match(e.request).then(response => {
+            return response || fetch(e.request);
+        })
+    );
+});`;
+            
+            const blob = new Blob([sw], {type: 'application/javascript'});
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).then(reg => {
+                console.log('SW registered');
+            }).catch(err => {
+                console.log('SW registration failed');
+            });
+        }
+
+        // PWAインストール
+        let deferredPrompt;
+        const installPrompt = document.getElementById('installPrompt');
+        const installButton = document.getElementById('installButton');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installPrompt.classList.add('show');
+        });
+
+        installButton.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response: ${outcome}`);
+                deferredPrompt = null;
+                installPrompt.classList.remove('show');
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA installed');
+            installPrompt.classList.remove('show');
+        });
+
+        // 既存のアプリケーションコード
+        const fileInput = document.getElementById('fileInput');
+        const cameraInput = document.getElementById('cameraInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const resultText = document.getElementById('resultText');
+        const resultDescription = document.getElementById('resultDescription');
+
+        const ripenessDescriptions = {
+            3: "グリーンチップ：完全に緑色。輸入時の状態。追熟が必要です。",
+            4: "緑と黄色が混在：先端にまだ緑が残っています。もう少し追熟が必要。",
+            5: "黄色に緑が少し：ほぼ黄色ですが、わずかに緑が残る。あと1-2日で食べ頃。",
+            6: "完全な黄色：理想的な食べ頃！甘みと酸味のバランスが最高です。",
+            7: "黄色に茶色の斑点：シュガースポット出現。完熟で最も甘い状態。",
+            8: "斑点が多い：非常に熟している。お菓子作りに最適。",
+            9: "褐色が多い：過熟状態。バナナブレッドなどの加工に向いています。"
+        };
+
+        fileInput.addEventListener('change', handleFileSelect);
+        cameraInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    displayAndAnalyzeImage(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function displayAndAnalyzeImage(imageSrc) {
+            previewImage.src = imageSrc;
+            previewImage.onload = function() {
+                uploadArea.style.display = 'none';
+                previewContainer.style.display = 'block';
+                analyzeRipeness();
+            };
+        }
+
+        function analyzeRipeness() {
+            canvas.width = previewImage.naturalWidth;
+            canvas.height = previewImage.naturalHeight;
+            ctx.drawImage(previewImage, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            let totalR = 0, totalG = 0, totalB = 0;
+            let yellowPixels = 0, greenPixels = 0, brownPixels = 0;
+            const pixelCount = data.length / 4;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                totalR += r;
+                totalG += g;
+                totalB += b;
+
+                const hue = rgbToHue(r, g, b);
+                const saturation = rgbToSaturation(r, g, b);
+                const brightness = (r + g + b) / 3;
+
+                if (hue >= 80 && hue <= 140 && saturation > 0.3) {
+                    greenPixels++;
+                }
+                else if (hue >= 40 && hue < 80 && saturation > 0.3) {
+                    yellowPixels++;
+                }
+                else if (saturation < 0.3 && brightness < 150) {
+                    brownPixels++;
+                }
+            }
+
+            const avgR = totalR / pixelCount;
+            const avgG = totalG / pixelCount;
+            const avgB = totalB / pixelCount;
+
+            const greenRatio = greenPixels / pixelCount;
+            const yellowRatio = yellowPixels / pixelCount;
+            const brownRatio = brownPixels / pixelCount;
+
+            let ripeness = determineRipeness(greenRatio, yellowRatio, brownRatio, avgR, avgG, avgB);
+            displayResult(ripeness);
+        }
+
+        function rgbToHue(r, g, b) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            const diff = max - min;
+
+            if (diff === 0) return 0;
+
+            let hue;
+            if (max === r) {
+                hue = ((g - b) / diff + (g < b ? 6 : 0)) / 6;
+            } else if (max === g) {
+                hue = ((b - r) / diff + 2) / 6;
+            } else {
+                hue = ((r - g) / diff + 4) / 6;
+            }
+
+            return hue * 360;
+        }
+
+        function rgbToSaturation(r, g, b) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+
+            if (max === 0) return 0;
+            return (max - min) / max;
+        }
+
+        function determineRipeness(greenRatio, yellowRatio, brownRatio, avgR, avgG, avgB) {
+            if (greenRatio > 0.4) {
+                return 3;
+            }
+            else if (greenRatio > 0.2 && yellowRatio > 0.2) {
+                return 4;
+            }
+            else if (greenRatio > 0.05 && yellowRatio > 0.4) {
+                return 5;
+            }
+            else if (yellowRatio > 0.5 && brownRatio < 0.05) {
+                return 6;
+            }
+            else if (yellowRatio > 0.4 && brownRatio < 0.15) {
+                return 7;
+            }
+            else if (brownRatio < 0.3) {
+                return 8;
+            }
+            else {
+                return 9;
+            }
+        }
+
+        function displayResult(level) {
+            document.querySelectorAll('.scale-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            setTimeout(() => {
+                const activeItem = document.querySelector(`.scale-item[data-level="${level}"]`);
+                if (activeItem) {
+                    activeItem.classList.add('active');
+                }
+
+                resultText.textContent = `熟度レベル: ${level}`;
+                resultDescription.textContent = ripenessDescriptions[level];
+            }, 500);
+        }
+
+        function resetApp() {
+            uploadArea.style.display = 'block';
+            previewContainer.style.display = 'none';
+            fileInput.value = '';
+            cameraInput.value = '';
+            document.querySelectorAll('.scale-item').forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    displayAndAnalyzeImage(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>
